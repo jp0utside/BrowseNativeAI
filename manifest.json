@@ -1,5 +1,5 @@
 {
-    "manifest_verson": 3,
+    "manifest_version": 3,
     "name": "BrowseNativeAI",
     "version": "1.0.0",
     "description": "BrowseNativeAI is a browser extension that lets users make changes to their web interfaces to make them more accessible using the power of AI.",
@@ -16,11 +16,6 @@
         }
     ],
     "action": {
-        "default_popup": "popup/popup.html",
-        "default_icon": {
-            "16": "icon16.png",
-            "48": "icon48.png",
-            "128": "icon128.png"
-        }
+        "default_popup": "popup/popup.html"
     }
 }
