@@ -1,0 +1,103 @@
+body {
+    width: 320px;
+    padding: 15px;
+    font-family: system-ui, sans-serif;
+  }
+  
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  h1 {
+    font-size: 20px;
+    margin: 0;
+  }
+  
+  .api-setup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  #api-key-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  #save-api-key {
+    padding: 8px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  #save-api-key:hover {
+    background: #45a049;
+  }
+  
+  small {
+    color: #666;
+    font-size: 11px;
+  }
+  
+  hr {
+    border: none;
+    border-top: 1px solid #eee;
+  }
+  
+  .presets {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .presets h3 {
+    font-size: 14px;
+    margin: 0 0 5px 0;
+  }
+  
+  .presets button {
+    padding: 10px;
+    background: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .presets button:hover {
+    background: #0b7dda;
+  }
+  
+  #reset {
+    background: #f44336;
+  }
+  
+  #reset:hover {
+    background: #da190b;
+  }
+  
+  #status {
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  #api-status {
+    display: block;        /* Add this */
+    width: 100%;          /* Add this */
+    padding: 10px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+    margin-top: 5px;      /* Optional: adds space above */
+  }
