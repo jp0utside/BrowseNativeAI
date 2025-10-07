@@ -62,9 +62,9 @@ function applyCSS(css) {
     let styleElement = document.getElementById(styleID);
 
     if (!styleElement) {
-        styleElement = document.createStyle('style');
+        styleElement = document.createElement('style');
         styleElement.id = styleID;
-        document.head.appendChile(styleElement);
+        document.head.appendChild(styleElement);
     }
 
     styleElement.textContent = css;

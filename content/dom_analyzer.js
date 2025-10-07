@@ -1,5 +1,5 @@
 class DOMAnalyzer {
-    analyzepage() {
+    analyzePage() {
         return {
             domain: this.extractDomain(window.location.hostname),
             url: window.location.href,
@@ -57,7 +57,7 @@ class DOMAnalyzer {
         return luminance < 128;
     }
 
-    guessPageType() {
+    pageType() {
         const url = window.location.href.toLowerCase();
 
         if (url.includes('/product/') || url.includes('/item/')) {return 'product'}

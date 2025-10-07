@@ -15,7 +15,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 })
 
-async function handleGeneratedModifications(request, sender) {
+async function handleGenerateModifications(request, sender) {
     const { pageAnalysis, preset } = request;
 
     console.log('Generating Modifications For: ', pageAnalysis.domain, preset);
