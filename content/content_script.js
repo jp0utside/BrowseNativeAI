@@ -15,6 +15,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             const attributes = domAnalyzer.scanPageAttributes();
             
+            showSuccess('Scan complete!');
             sendResponse({ attributes: attributes });
             return true;
         } else if (request.action == 'highlightElement') {
