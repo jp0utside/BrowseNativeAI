@@ -143,7 +143,15 @@ function createAttributeItem(config) {
     if (controls == 'colorPreview') {
         const preview = document.createElement('div');
         preview.className = 'color-preview';
-        preview.style.background = value;
+        preview.style.backgroundColor = value;
+        preview.title = 'Click to change color';
+
+        //Click handler
+        preview.onclick = (e) => {
+            e.stopPropagation();
+            openColorPicker(type, value, elementIds, preview);
+        };
+
         item.appendChild(preview);
     }
 
@@ -310,3 +318,62 @@ function setButtonLoading(buttonId, isLoading) {
         btn.disabled = false;
     }
 }
+
+// ===== Color Picker =====
+function openColorPicker(type, currentColor, elementIds, previewElement) {
+    // Create a hidden color input
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = rgbToHex(currentColor);
+    
+    colorInput.onchange = async (e) => {
+      const newColor = e.target.value;
+      
+      try {
+        if (!currentTab) {
+          await getCurrentTab();
+        }
+        
+        await chrome.tabs.sendMessage(currentTab.id, {
+          action: 'applyChange',
+          attributeType: type,
+          oldValue: currentColor,
+          newValue: newColor,
+          elementIds: elementIds
+        });
+        
+        // Update the preview
+        previewElement.style.backgroundColor = newColor;
+        
+      } catch (error) {
+        console.error('Error applying color change:', error);
+        showStatus('Error applying color change', 'error');
+      }
+    };
+    
+    // Trigger the color picker
+    colorInput.click();
+  }
+  
+  // Convert RGB to Hex for color picker
+  function rgbToHex(rgb) {
+    // Handle hex colors that are already in hex format
+    if (rgb.startsWith('#')) {
+      return rgb;
+    }
+    
+    // Parse rgb(r, g, b) or rgba(r, g, b, a)
+    const match = rgb.match(/\d+/g);
+    if (!match || match.length < 3) {
+      return '#000000'; // Default to black if parsing fails
+    }
+    
+    const r = parseInt(match[0]);
+    const g = parseInt(match[1]);
+    const b = parseInt(match[2]);
+    
+    return '#' + [r, g, b].map(x => {
+      const hex = x.toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    }).join('');
+  }
