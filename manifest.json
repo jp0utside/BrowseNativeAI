@@ -4,14 +4,21 @@
     "version": "1.0.0",
     "description": "BrowseNativeAI is a browser extension that lets users make changes to their web interfaces to make them more accessible using the power of AI.",
     "permissions": ["storage", "activeTab", "scripting"],
-    "host_permissions": ["<all_urls>"],
+    "host_permissions": [
+        "https://*/*",
+        "http://*/*"
+    ],
     "background": {
         "service_worker": "background/service_worker.js"
     },
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["content/content_script.js", "content/dom_analyzer.js"],
+            "js": [ 
+                "content/dom_analyzer.js",
+                "content/dom_modifier.js",
+                "content/content_script.js"
+            ],
             "run_at": "document_idle"
         }
     ],

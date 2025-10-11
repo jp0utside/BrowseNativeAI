@@ -1,24 +1,92 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <link rel="stylesheet" href="popup.css">
-    </head>
-    <body>
-        <div class="container">
-            <h1>BrowseNativeAI</h1>
-            <div class-="api-setup">
-                <input type="password" id="api-key-input" placeholder="Claude API Key (Optional)">
-                <button id="save-api-key">Save Key</button>
-                <small id="api-status"></div>
-            </div>
-            <hr>
-            <div class="presets">
-                <button id="large-text">Large Text Mode</button>
-                <button id="high-contrast">High Contrast Mode</button>
-                <button id="reset">Reset</button>
-            </div>
-            <div id="status"></div>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1>BrowseNativeAI</h1>
+      <p class="tagline">Customize any website</p>
+    </header>
+    
+    <!-- Main Actions -->
+    <div class="actions">
+      <button id="scan-btn" class="btn btn-primary">
+        <span class="btn-icon">🔍</span>
+        Scan Page
+      </button>
+      <button id="reset-btn" class="btn btn-secondary">
+        <span class="btn-icon">↺</span>
+        Reset All
+      </button>
+    </div>
+    
+    <!-- Status Message -->
+    <div id="status-message" class="status-message" style="display: none;"></div>
+    
+    <!-- Attributes Panel (hidden until scan) -->
+    <div id="attributes-panel" class="attributes-panel" style="display: none;">
+      
+      <!-- Font Sizes Section -->
+      <div class="attribute-section" id="font-sizes-section">
+        <div class="section-header">
+          <h3>📝 Font Sizes</h3>
+          <span class="section-count" id="font-sizes-count">0</span>
         </div>
-        <script src="popup.js"></script>
-    </body>
+        <div id="font-sizes-list" class="attribute-list"></div>
+      </div>
+      
+      <!-- Text Colors Section -->
+      <div class="attribute-section" id="colors-section">
+        <div class="section-header">
+          <h3>🎨 Text Colors</h3>
+          <span class="section-count" id="colors-count">0</span>
+        </div>
+        <div id="colors-list" class="attribute-list"></div>
+      </div>
+      
+      <!-- Background Colors Section -->
+      <div class="attribute-section" id="backgrounds-section">
+        <div class="section-header">
+          <h3>🖼️ Background Colors</h3>
+          <span class="section-count" id="backgrounds-count">0</span>
+        </div>
+        <div id="backgrounds-list" class="attribute-list"></div>
+      </div>
+      
+      <!-- Padding Section -->
+      <div class="attribute-section" id="paddings-section">
+        <div class="section-header">
+          <h3>📦 Padding</h3>
+          <span class="section-count" id="paddings-count">0</span>
+        </div>
+        <div id="paddings-list" class="attribute-list"></div>
+      </div>
+      
+      <!-- Margin Section -->
+      <div class="attribute-section" id="margins-section">
+        <div class="section-header">
+          <h3>📏 Margin</h3>
+          <span class="section-count" id="margins-count">0</span>
+        </div>
+        <div id="margins-list" class="attribute-list"></div>
+      </div>
+      
+    </div>
+    
+    <!-- Empty State (shown when no attributes) -->
+    <div id="empty-state" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p>Click "Scan Page" to analyze the current website</p>
+    </div>
+    
+  </div>
+  <script src="popup.js"></script>
+</body>
 </html>
+
+
+
