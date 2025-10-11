@@ -1,83 +1,62 @@
 console.log('===== BrowseNativeAI Content Script Loaded =====');
 
+//Create DOM classes
+const domAnalyzer = new DOMAnalyzer();
+const domModifier = new DOMModifier();
+
 //Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     try {
         console.log('Message received: ', request);
-        if (request.action == 'applyPreset') {
-            console.log('Applying Preset: ', request.preset);
-            applyPreset(request.preset);
+
+        if (request.action == 'scanPage') {
+            //Get scan from analyzer
+            showLoadingIndicator('Scanning page...');
+
+            const attributes = domAnalyzer.scanPageAttributes();
+            
+            sendResponse({ attributes: attributes });
+            return true;
+        } else if (request.action == 'highlightElement') {
+            //Highlight with modifier
+            domModifier.highlightElements(request.elementIds);
+            sendResponse({ success: true });
+            return true;
+        } else if (request.action == 'clearHighlights') {
+            //Clear with modifier
+            domModifier.clearHighlights();
+            sendResponse({ success: true });
+            return true;
+        } else if (request.action == 'applyChange') {
+            //Change with modifier
+            domModifier.applyAttributeChange(
+                request.attributeType,
+                request.oldValue,
+                request.newValue,
+                request.elementIds
+            );
+
+            sendResponse({ success: true });
+            return true;
         } else if (request.action == 'reset') {
-            resetStyles();
+            //Reset with modifier
+            domModifier.resetAllChanges();
+            showSuccess('All changes reset!');
+            sendResponse({ success: true });
+            return true;
         }
+
     } catch (error) {
         console.log('Error in message handler: ', error);
+        showError('Error' + error.message);
+        sendResponse({ error: error.message });
+        return true;
     }
 });
 
-async function applyPreset(preset) {
-    try {
-        //Show loading indicator
-        showLoadingIndicator('Analyzing page with AI...');
 
-        //Analyze the page
-        const analyzer = new DOMAnalyzer();
-        const pageAnalysis = analyzer.analyzePage();
-
-        console.log('Page analysis: ', pageAnalysis);
-
-        //Send to background script for AI processing
-        const response = await chrome.runtime.sendMessage({
-            action: 'generateModifications',
-            pageAnalysis: pageAnalysis,
-            preset: preset
-        });
-
-        console.log('Received modifications: ', response);
-
-        if (response.error) {
-            showError('Error: ' + response.error);
-            return
-        }
-
-        //Apply the CSS changes
-        applyCSS(response.modifications.css);
-
-        //Update loading indicator
-        if (response.fromCache) {
-            showSuccess('Applied (from cache)');
-        } else if (response.isSimple) {
-            showSuccess('Applied (simple mode)');
-        } else {
-            showSuccess('Applied (with AI)');
-        }
-    } catch (error) {
-        console.error('Error applying preset: ', error);
-        showError('Something went wrong');
-    }
-}
-
-function applyCSS(css) {
-    const styleID = 'browse-native-ai-styles';
-    let styleElement = document.getElementById(styleID);
-
-    if (!styleElement) {
-        styleElement = document.createElement('style');
-        styleElement.id = styleID;
-        document.head.appendChild(styleElement);
-    }
-
-    styleElement.textContent = css;
-    console.log('CSS applied');
-}
-
-function resetStyles() {
-    const styleElement = document.getElementById('browse-native-ai-styles');
-    if (styleElement) {
-        styleElement.remove();
-        showSuccess('Style reset');
-    }
-}
+// ====== Notification Methods ======
+// Methods for managing notifications on screen
 
 function showLoadingIndicator(message) {
     let overlay = document.getElementById('browse-native-ai-overlay');
