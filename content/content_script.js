@@ -10,15 +10,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         console.log('Message received: ', request);
 
         if (request.action == 'scanPage') {
-            //Get scan from analyzer
+            //Get scan from analyzer (async to prevent blocking)
             showLoadingIndicator('Scanning page...');
 
-            const attributes = domAnalyzer.scanPageAttributes();
+            // Use setTimeout to allow UI to update and prevent blocking
+            setTimeout(() => {
+                try {
+                    const attributes = domAnalyzer.scanPageAttributes();
+                    
+                    showSuccess('Scan complete!');
+                    sendResponse({ attributes: attributes });
+                } catch (error) {
+                    console.error('Error during scan:', error);
+                    showError('Scan failed: ' + error.message);
+                    sendResponse({ error: error.message });
+                }
+            }, 100);
             
-            showSuccess('Scan complete!');
-            sendResponse({ attributes: attributes });
-            return true;
-        } else if (request.action == 'highlightElement') {
+            return true; // Keep message channel open for async response
+        } else if (request.action == 'highlightElements') {
             //Highlight with modifier
             domModifier.highlightElements(request.elementIds);
             sendResponse({ success: true });
@@ -58,8 +68,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // ====== Notification Methods ======
 // Methods for managing notifications on screen
+let notificationTimeout = null;
 
 function showLoadingIndicator(message) {
+    // Clear any existing timeout
+    if (notificationTimeout) {
+        clearTimeout(notificationTimeout);
+        notificationTimeout = null;
+    }
+
     let overlay = document.getElementById('browse-native-ai-overlay');
 
     if (!overlay) {
@@ -77,12 +94,14 @@ function showLoadingIndicator(message) {
             font-family: system-ui, sans-serif;
             font-size: 14px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease;
         `;
         document.body.appendChild(overlay);
     }
 
     overlay.textContent = message;
     overlay.style.background = 'rgba(0, 0, 0, 0.9)';
+    overlay.style.opacity = '1';
 }
 
 function showSuccess(message) {
@@ -90,7 +109,22 @@ function showSuccess(message) {
     if (overlay) {
         overlay.textContent = message;
         overlay.style.background = 'rgba(76, 175, 80, 0.9)';
-        setTimeout(() => overlay.remove(), 3000);
+        
+        // Clear any existing timeout
+        if (notificationTimeout) {
+            clearTimeout(notificationTimeout);
+        }
+        
+        // Fade out and remove
+        notificationTimeout = setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.remove();
+                }
+                notificationTimeout = null;
+            }, 300);
+        }, 2000);
     }
 }
 
@@ -99,6 +133,21 @@ function showError(message) {
     if (overlay) {
         overlay.textContent = message;
         overlay.style.background = 'rgba(244, 67, 54, 0.9)';
-        setTimeout(() => overlay.remove(), 4000);
+        
+        // Clear any existing timeout
+        if (notificationTimeout) {
+            clearTimeout(notificationTimeout);
+        }
+        
+        // Fade out and remove
+        notificationTimeout = setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => {
+                if (overlay.parentNode) {
+                    overlay.remove();
+                }
+                notificationTimeout = null;
+            }, 300);
+        }, 3000);
     }
 }

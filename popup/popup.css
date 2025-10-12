@@ -284,6 +284,26 @@ body::-webkit-scrollbar-thumb:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.value-original {
+  color: #6c757d;
+  text-decoration: line-through;
+  font-size: 11px;
+}
+
+.value-arrow {
+  color: #667eea;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.value-current {
+  color: #667eea;
+  font-weight: 700;
 }
 
 .attribute-count {

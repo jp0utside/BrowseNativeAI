@@ -1,6 +1,7 @@
 // ===State Management===
 let currentAttributes = null;
 let currentTab = null;
+let appliedChanges = new Map(); // Track changes: key -> { originalValue, currentValue }
 
 // ===Initialize===
 document.addEventListener('DOMContentLoaded', () => {
@@ -39,6 +40,9 @@ async function handleScan() {
             return;
         }
 
+        // Clear previous changes when scanning
+        appliedChanges.clear();
+        
         currentAttributes = response.attributes;
         displayAttributes(response.attributes);
 
@@ -78,6 +82,7 @@ async function handleReset() {
         document.getElementById('empty-state').style.display = 'block';
 
         currentAttributes = null;
+        appliedChanges.clear();
 
         showStatus('All changes reset!', 'success');
         setButtonLoading('reset-btn', false);
@@ -121,12 +126,16 @@ function displayAttributeCategory(categoryId, items, attributeType, controlType)
     section.style.display = 'block';
 
     items.forEach(item => {
+        const changeKey = getChangeKey(attributeType, item.elementIds);
+        const change = appliedChanges.get(changeKey);
+        
         const itemEl = createAttributeItem({
             value: item.value,
-            count: item.value,
+            count: item.count,
             elementIds: item.elementIds,
             type: attributeType,
-            controls: controlType
+            controls: controlType,
+            currentValue: change ? change.currentValue : null
         });
         listContainer.appendChild(itemEl);
     });
@@ -134,22 +143,27 @@ function displayAttributeCategory(categoryId, items, attributeType, controlType)
 
 // ===Create Attribute Item===
 function createAttributeItem(config) {
-    const { value, count, elementIds, type, controls } = config;
+    const { value, count, elementIds, type, controls, currentValue } = config;
 
     const item = document.createElement('div');
     item.className = 'attribute-item';
+    
+    // Store data for later updates
+    item.dataset.originalValue = value;
+    item.dataset.elementIds = JSON.stringify(elementIds);
+    item.dataset.type = type;
 
     //Color preview for colors and background
     if (controls == 'colorPreview') {
         const preview = document.createElement('div');
         preview.className = 'color-preview';
-        preview.style.backgroundColor = value;
+        preview.style.backgroundColor = currentValue || value;
         preview.title = 'Click to change color';
 
         //Click handler
         preview.onclick = (e) => {
             e.stopPropagation();
-            openColorPicker(type, value, elementIds, preview);
+            openColorPicker(type, value, elementIds, preview, item);
         };
 
         item.appendChild(preview);
@@ -159,10 +173,34 @@ function createAttributeItem(config) {
     const info = document.createElement('div');
     info.className = 'attribute-info';
 
+    // Value display - show original and current if changed
     const valueEl = document.createElement('div');
     valueEl.className = 'attribute-value';
-    valueEl.textContent = value;
-    valueEl.title = value; //Setting this so hover reveals full value
+    
+    if (currentValue && currentValue !== value) {
+        // Show both original and current
+        const originalSpan = document.createElement('span');
+        originalSpan.className = 'value-original';
+        originalSpan.textContent = value;
+        originalSpan.title = `Original: ${value}`;
+        
+        const arrow = document.createElement('span');
+        arrow.className = 'value-arrow';
+        arrow.textContent = ' → ';
+        
+        const currentSpan = document.createElement('span');
+        currentSpan.className = 'value-current';
+        currentSpan.textContent = currentValue;
+        currentSpan.title = `Current: ${currentValue}`;
+        
+        valueEl.appendChild(originalSpan);
+        valueEl.appendChild(arrow);
+        valueEl.appendChild(currentSpan);
+    } else {
+        // Show only current value
+        valueEl.textContent = value;
+        valueEl.title = value;
+    }
 
     const countEl = document.createElement('div');
     countEl.className = 'attribute-count';
@@ -179,22 +217,22 @@ function createAttributeItem(config) {
 
         const minusBtn = document.createElement('button');
         minusBtn.className = 'control-btn';
-        minusBtn.titleContent = '-';
+        minusBtn.textContent = '-';
         minusBtn.title = 'Decrease';
 
         minusBtn.onclick = (e) => {
-            e.stopPropagation;
-            adjustAttribute(type, value, elementIds, -1);
+            e.stopPropagation();
+            adjustAttribute(type, value, elementIds, -1, item);
         };
 
         const plusBtn = document.createElement('button');
         plusBtn.className = 'control-btn';
-        plusBtn.titleContent = '+';
+        plusBtn.textContent = '+';
         plusBtn.title = 'Increase';
 
         plusBtn.onclick = (e) => {
-            e.stopPropagation;
-            adjustAttribute(type, value, elementIds, 1);
+            e.stopPropagation();
+            adjustAttribute(type, value, elementIds, 1, item);
         };
 
         controlsDiv.appendChild(minusBtn);
@@ -215,8 +253,13 @@ function createAttributeItem(config) {
 }
 
 // ===Adjust Attributes===
-async function adjustAttribute(type, oldValue, elementIds, direction) {
-    const newValue = calculateNewValue(type, oldValue, direction);
+async function adjustAttribute(type, originalValue, elementIds, direction, itemElement) {
+    // Get the current value from tracked changes or use original
+    const changeKey = getChangeKey(type, elementIds);
+    const change = appliedChanges.get(changeKey);
+    const currentValue = change ? change.currentValue : originalValue;
+    
+    const newValue = calculateNewValue(type, currentValue, direction);
 
     try {
         if (!currentTab) {
@@ -226,10 +269,19 @@ async function adjustAttribute(type, oldValue, elementIds, direction) {
         await chrome.tabs.sendMessage(currentTab.id, {
             action: 'applyChange',
             attributeType: type,
-            oldValue: oldValue,
+            oldValue: currentValue,
             newValue: newValue,
             elementIds: elementIds
         });
+
+        // Track the change
+        appliedChanges.set(changeKey, {
+            originalValue: originalValue,
+            currentValue: newValue
+        });
+        
+        // Update the UI to show the change
+        updateItemDisplay(itemElement, originalValue, newValue);
 
     } catch (error) {
         console.error('Error applying changes: ', error);
@@ -238,7 +290,7 @@ async function adjustAttribute(type, oldValue, elementIds, direction) {
 }
 
 function calculateNewValue(type, oldValue, direction) {
-    if (type === 'font-size') {
+    if (type === 'fontSize') {
         const size = parseFloat(oldValue);
         const unit = oldValue.replace(size, '');
         const newSize = Math.max(8, size + (direction * 2)); //Minumum 8px font size
@@ -253,6 +305,45 @@ function calculateNewValue(type, oldValue, direction) {
     }
 
     return oldValue;
+}
+
+// Generate unique key for tracking changes
+function getChangeKey(type, elementIds) {
+    return `${type}-${JSON.stringify(elementIds)}`;
+}
+
+// Update item display to show original -> current value
+function updateItemDisplay(itemElement, originalValue, newValue) {
+    const valueEl = itemElement.querySelector('.attribute-value');
+    if (!valueEl) return;
+    
+    // Clear existing content
+    valueEl.innerHTML = '';
+    
+    if (newValue !== originalValue) {
+        // Show both original and current
+        const originalSpan = document.createElement('span');
+        originalSpan.className = 'value-original';
+        originalSpan.textContent = originalValue;
+        originalSpan.title = `Original: ${originalValue}`;
+        
+        const arrow = document.createElement('span');
+        arrow.className = 'value-arrow';
+        arrow.textContent = ' → ';
+        
+        const currentSpan = document.createElement('span');
+        currentSpan.className = 'value-current';
+        currentSpan.textContent = newValue;
+        currentSpan.title = `Current: ${newValue}`;
+        
+        valueEl.appendChild(originalSpan);
+        valueEl.appendChild(arrow);
+        valueEl.appendChild(currentSpan);
+    } else {
+        // Show only current value
+        valueEl.textContent = originalValue;
+        valueEl.title = originalValue;
+    }
 }
 
 // ===Highlight Elements===
@@ -320,7 +411,12 @@ function setButtonLoading(buttonId, isLoading) {
 }
 
 // ===== Color Picker =====
-function openColorPicker(type, currentColor, elementIds, previewElement) {
+function openColorPicker(type, originalColor, elementIds, previewElement, itemElement) {
+    // Get the current color from tracked changes or use original
+    const changeKey = getChangeKey(type, elementIds);
+    const change = appliedChanges.get(changeKey);
+    const currentColor = change ? change.currentValue : originalColor;
+    
     // Create a hidden color input
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
@@ -342,8 +438,17 @@ function openColorPicker(type, currentColor, elementIds, previewElement) {
           elementIds: elementIds
         });
         
+        // Track the change
+        appliedChanges.set(changeKey, {
+            originalValue: originalColor,
+            currentValue: newColor
+        });
+        
         // Update the preview
         previewElement.style.backgroundColor = newColor;
+        
+        // Update the UI to show the change
+        updateItemDisplay(itemElement, originalColor, newColor);
         
       } catch (error) {
         console.error('Error applying color change:', error);

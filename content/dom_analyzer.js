@@ -13,39 +13,60 @@ class DOMAnalyzer {
             margins: new Map()
         };
 
-        const allElements = document.querySelectorAll('*');
+        // Exclude elements that don't need styling analysis
+        const excludeSelectors = 'script, style, noscript, meta, link, head, [data-browse-native-id]';
+        const allElements = document.querySelectorAll('body *');
+        
+        // More efficient visibility check - avoid getComputedStyle when possible
         const visibleElements = Array.from(allElements).filter(el => {
-            const style = window.getComputedStyle(el);
-            return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent != null;
+            // Skip excluded elements
+            if (el.matches(excludeSelectors)) return false;
+            
+            // Quick check first (doesn't trigger style calculation)
+            if (!el.offsetParent && el.tagName !== 'BODY') return false;
+            
+            return true;
         });
 
         console.log(`Analyzing ${visibleElements.length} visible elements...`);
 
+        //Analyze elements - sample if too many
+        const maxElements = 1000; // Limit to prevent freezing
+        const elementsToAnalyze = visibleElements.length > maxElements 
+            ? this.sampleElements(visibleElements, maxElements)
+            : visibleElements;
+        
+        console.log(`Processing ${elementsToAnalyze.length} elements (${visibleElements.length} total visible)...`);
+
         //Analyze elements
-        visibleElements.forEach(el => {
+        elementsToAnalyze.forEach(el => {
             const style = window.getComputedStyle(el);
 
-            //Font sizes (for elements w/ text) -- with checks for inconsistant trim results
-            if(el.textContent && typeof el.textContent.trim === 'function'){
-                const trimmedText = el.textContent.trim();
-                if (trimmedText && trimmedText.length > 0) {
-                    const fontSize = style.fontSize;
-                    if (!attributes.fontSizes.has(fontSize)) {
-                        attributes.fontSizes.set(fontSize, []);
-                    }
-                    attributes.fontSizes.get(fontSize).push(el);
-            }}
-
-            //Text colors
-            const color = style.color;
-            if(!attributes.colors.has(color)){
-                attributes.colors.set(color, []);
+            //Font sizes (only for elements with direct text content)
+            const hasDirectText = Array.from(el.childNodes).some(
+                node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+            );
+            
+            if(hasDirectText) {
+                const fontSize = style.fontSize;
+                if (!attributes.fontSizes.has(fontSize)) {
+                    attributes.fontSizes.set(fontSize, []);
+                }
+                attributes.fontSizes.get(fontSize).push(el);
             }
-            attributes.colors.get(color).push(el);
+
+            //Text colors (only if element has text)
+            if (hasDirectText) {
+                const color = style.color;
+                if(!attributes.colors.has(color)){
+                    attributes.colors.set(color, []);
+                }
+                attributes.colors.get(color).push(el);
+            }
 
             //Background Colors (non-transparent)
             const bgColor = style.backgroundColor;
-            if(bgColor && bgColor !== 'rgba(0,0,0,0)' && bgColor !== 'transparent'){
+            if(bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent'){
                 if(!attributes.backgrounds.has(bgColor)){
                     attributes.backgrounds.set(bgColor, []);
                 }
@@ -64,7 +85,7 @@ class DOMAnalyzer {
             //Margins (non-zero)
             const margin = style.margin;
             if(margin && margin !== '0px'){
-                if(!attributes.margins.get(margin)){
+                if(!attributes.margins.has(margin)){
                     attributes.margins.set(margin, []);
                 }
                 attributes.margins.get(margin).push(el);
@@ -93,6 +114,23 @@ class DOMAnalyzer {
         return result;
     }
 
+    // Helper to sample elements intelligently
+    sampleElements(elements, maxCount) {
+        // Prioritize certain element types
+        const priority = elements.filter(el => {
+            const tag = el.tagName.toLowerCase();
+            return ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'button', 'a', 'span', 'div', 'section', 'article', 'header', 'footer', 'nav'].includes(tag);
+        });
+        
+        if (priority.length <= maxCount) {
+            return priority;
+        }
+        
+        // If still too many, sample evenly
+        const step = Math.floor(priority.length / maxCount);
+        return priority.filter((_, i) => i % step === 0).slice(0, maxCount);
+    }
+
     mapToArray(map) {
         const array = [];
         map.forEach((elements, value) => {
@@ -102,7 +140,7 @@ class DOMAnalyzer {
 
                 //Store element identifiers for page highlighting
                 elementIds: elements.map((el, idx) => { 
-                    const id = `browse-native-element-${Date.now()}-${idx}`;
+                    const id = `browse-native-element-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${idx}`;
                     el.setAttribute('data-browse-native-id', id);
                     return id;
                 })
