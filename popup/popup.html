@@ -27,54 +27,121 @@
     <!-- Status Message -->
     <div id="status-message" class="status-message" style="display: none;"></div>
     
-    <!-- Attributes Panel (hidden until scan) -->
-    <div id="attributes-panel" class="attributes-panel" style="display: none;">
+    <!-- Basic Controls (hidden until scan) -->
+    <div id="basic-controls" class="basic-controls" style="display: none;">
+      <h2 class="section-title">Quick Adjustments</h2>
       
-      <!-- Font Sizes Section -->
-      <div class="attribute-section" id="font-sizes-section">
-        <div class="section-header">
-          <h3>📝 Font Sizes</h3>
-          <span class="section-count" id="font-sizes-count">0</span>
-        </div>
-        <div id="font-sizes-list" class="attribute-list"></div>
+      <!-- Minimum Text Size -->
+      <div class="control-group">
+        <label for="min-text-size">
+          <span class="control-icon">📝</span>
+          <span class="control-label">Minimum Text Size</span>
+          <span class="control-value" id="min-text-size-value">12px</span>
+        </label>
+        <input type="range" id="min-text-size" min="8" max="24" value="12" step="1">
       </div>
       
-      <!-- Text Colors Section -->
-      <div class="attribute-section" id="colors-section">
-        <div class="section-header">
-          <h3>🎨 Text Colors</h3>
-          <span class="section-count" id="colors-count">0</span>
-        </div>
-        <div id="colors-list" class="attribute-list"></div>
+      <!-- Minimum Button Size -->
+      <div class="control-group">
+        <label for="min-button-size">
+          <span class="control-icon">🔘</span>
+          <span class="control-label">Minimum Button Size</span>
+          <span class="control-value" id="min-button-size-value">32px</span>
+        </label>
+        <input type="range" id="min-button-size" min="24" max="60" value="32" step="2">
       </div>
       
-      <!-- Background Colors Section -->
-      <div class="attribute-section" id="backgrounds-section">
-        <div class="section-header">
-          <h3>🖼️ Background Colors</h3>
-          <span class="section-count" id="backgrounds-count">0</span>
-        </div>
-        <div id="backgrounds-list" class="attribute-list"></div>
+      <!-- Text Contrast -->
+      <div class="control-group">
+        <label for="text-contrast">
+          <span class="control-icon">◐</span>
+          <span class="control-label">Text Contrast</span>
+          <span class="control-value" id="text-contrast-value">Normal</span>
+        </label>
+        <input type="range" id="text-contrast" min="0" max="100" value="0" step="10">
       </div>
       
-      <!-- Padding Section -->
-      <div class="attribute-section" id="paddings-section">
-        <div class="section-header">
-          <h3>📦 Padding</h3>
-          <span class="section-count" id="paddings-count">0</span>
-        </div>
-        <div id="paddings-list" class="attribute-list"></div>
+      <!-- Spacing -->
+      <div class="control-group">
+        <label for="spacing">
+          <span class="control-icon">↔️</span>
+          <span class="control-label">Element Spacing</span>
+          <span class="control-value" id="spacing-value">Normal</span>
+        </label>
+        <input type="range" id="spacing" min="0" max="100" value="0" step="10">
+      </div>
+    </div>
+    
+    <!-- Advanced Mode (hidden until scan) -->
+    <div id="advanced-mode" class="advanced-mode" style="display: none;">
+      <div class="advanced-mode-header" id="advanced-mode-toggle">
+        <h2 class="section-title">Advanced Controls</h2>
+        <span class="toggle-icon">▼</span>
       </div>
       
-      <!-- Margin Section -->
-      <div class="attribute-section" id="margins-section">
-        <div class="section-header">
-          <h3>📏 Margin</h3>
-          <span class="section-count" id="margins-count">0</span>
+      <div id="attributes-panel" class="attributes-panel">
+        
+        <!-- Font Sizes Section -->
+        <div class="attribute-section" id="font-sizes-section">
+          <div class="section-header" data-section="font-sizes">
+            <h3>📝 Font Sizes</h3>
+            <div class="section-right">
+              <span class="section-count" id="font-sizes-count">0</span>
+              <span class="section-toggle">▼</span>
+            </div>
+          </div>
+          <div id="font-sizes-list" class="attribute-list"></div>
         </div>
-        <div id="margins-list" class="attribute-list"></div>
+        
+        <!-- Text Colors Section -->
+        <div class="attribute-section" id="colors-section">
+          <div class="section-header" data-section="colors">
+            <h3>🎨 Text Colors</h3>
+            <div class="section-right">
+              <span class="section-count" id="colors-count">0</span>
+              <span class="section-toggle">▼</span>
+            </div>
+          </div>
+          <div id="colors-list" class="attribute-list"></div>
+        </div>
+        
+        <!-- Background Colors Section -->
+        <div class="attribute-section" id="backgrounds-section">
+          <div class="section-header" data-section="backgrounds">
+            <h3>🖼️ Background Colors</h3>
+            <div class="section-right">
+              <span class="section-count" id="backgrounds-count">0</span>
+              <span class="section-toggle">▼</span>
+            </div>
+          </div>
+          <div id="backgrounds-list" class="attribute-list"></div>
+        </div>
+        
+        <!-- Padding Section -->
+        <div class="attribute-section" id="paddings-section">
+          <div class="section-header" data-section="paddings">
+            <h3>📦 Padding</h3>
+            <div class="section-right">
+              <span class="section-count" id="paddings-count">0</span>
+              <span class="section-toggle">▼</span>
+            </div>
+          </div>
+          <div id="paddings-list" class="attribute-list"></div>
+        </div>
+        
+        <!-- Margin Section -->
+        <div class="attribute-section" id="margins-section">
+          <div class="section-header" data-section="margins">
+            <h3>📏 Margin</h3>
+            <div class="section-right">
+              <span class="section-count" id="margins-count">0</span>
+              <span class="section-toggle">▼</span>
+            </div>
+          </div>
+          <div id="margins-list" class="attribute-list"></div>
+        </div>
+        
       </div>
-      
     </div>
     
     <!-- Empty State (shown when no attributes) -->

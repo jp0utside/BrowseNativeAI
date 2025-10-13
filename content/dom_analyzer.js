@@ -101,10 +101,16 @@ class DOMAnalyzer {
             margins: this.mapToArray(attributes.margins)
         }
 
-        //Sort by element count
+        //Sort by importance score (not just count)
         Object.keys(result).forEach(key => {
             if (result[key] && Array.isArray(result[key])) {
-                result[key].sort((a, b) => b.count - a.count);
+                // Calculate importance score for each attribute group
+                result[key].forEach(item => {
+                    item.importanceScore = this.calculateImportanceScore(item);
+                });
+                
+                // Sort by importance score (higher is better)
+                result[key].sort((a, b) => b.importanceScore - a.importanceScore);
                 result[key] = result[key].slice(0, 20); //Limiting to top 20 elements for UI display
             } else {
                 result[key] = [];
@@ -147,6 +153,64 @@ class DOMAnalyzer {
             });
         });
         return array;
+    }
+
+    // Calculate importance score for an attribute group
+    calculateImportanceScore(attributeGroup) {
+        const elements = attributeGroup.elementIds.map(id => 
+            document.querySelector(`[data-browse-native-id="${id}"]`)
+        ).filter(el => el); // Filter out nulls
+        
+        if (elements.length === 0) return 0;
+        
+        let score = 0;
+        
+        elements.forEach(el => {
+            // Base score from element type (semantic elements are more important)
+            const tag = el.tagName.toLowerCase();
+            const tagScores = {
+                'h1': 100, 'h2': 90, 'h3': 80, 'h4': 70, 'h5': 60, 'h6': 50,
+                'p': 45, 'button': 85, 'a': 70,
+                'article': 60, 'section': 55, 'header': 60, 'footer': 50, 'nav': 65,
+                'main': 70, 'aside': 40,
+                'li': 35, 'ul': 30, 'ol': 30,
+                'span': 25, 'div': 20, 'td': 30, 'th': 40,
+                'input': 75, 'label': 40, 'textarea': 70, 'select': 70
+            };
+            score += tagScores[tag] || 10;
+            
+            // Bonus for elements with text content (visible to user)
+            const hasText = Array.from(el.childNodes).some(
+                node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+            );
+            if (hasText) {
+                score += 30;
+            }
+            
+            // Bonus for larger elements (more visually prominent)
+            const rect = el.getBoundingClientRect();
+            const area = rect.width * rect.height;
+            if (area > 10000) score += 20; // Large elements
+            else if (area > 1000) score += 10; // Medium elements
+            
+            // Bonus for elements in viewport (currently visible)
+            if (rect.top >= 0 && rect.top <= window.innerHeight) {
+                score += 25;
+            }
+            
+            // Penalty for elements that look like spacers
+            const className = el.className || '';
+            const isSpacer = /spacer|divider|separator|gap/i.test(className);
+            if (isSpacer) {
+                score -= 30;
+            }
+        });
+        
+        // Average score per element, but also consider total count
+        const avgScore = score / elements.length;
+        const countBonus = Math.min(elements.length * 2, 50); // Cap count bonus at 50
+        
+        return avgScore + countBonus;
     }
 
     //Helper method for getting page info

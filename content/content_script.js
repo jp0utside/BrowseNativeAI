@@ -55,6 +55,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             showSuccess('All changes reset!');
             sendResponse({ success: true });
             return true;
+        } else if (request.action == 'applyMinTextSize') {
+            domModifier.applyMinTextSize(request.value);
+            sendResponse({ success: true });
+            return true;
+        } else if (request.action == 'applyMinButtonSize') {
+            domModifier.applyMinButtonSize(request.value);
+            sendResponse({ success: true });
+            return true;
+        } else if (request.action == 'applyTextContrast') {
+            domModifier.applyTextContrast(request.value);
+            sendResponse({ success: true });
+            return true;
+        } else if (request.action == 'applySpacing') {
+            domModifier.applySpacing(request.value);
+            sendResponse({ success: true });
+            return true;
         }
 
     } catch (error) {

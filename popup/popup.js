@@ -18,6 +18,25 @@ async function getCurrentTab() {
 function setupEventListeners() {
     document.getElementById('scan-btn').addEventListener('click', handleScan);
     document.getElementById('reset-btn').addEventListener('click', handleReset);
+    
+    // Basic controls
+    document.getElementById('min-text-size').addEventListener('input', handleMinTextSize);
+    document.getElementById('min-button-size').addEventListener('input', handleMinButtonSize);
+    document.getElementById('text-contrast').addEventListener('input', handleTextContrast);
+    document.getElementById('spacing').addEventListener('input', handleSpacing);
+    
+    // Advanced mode toggle
+    document.getElementById('advanced-mode-toggle').addEventListener('click', toggleAdvancedMode);
+    
+    // Section collapse toggles
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+            const section = e.currentTarget.closest('.attribute-section');
+            if (section) {
+                section.classList.toggle('collapsed');
+            }
+        });
+    });
 }
 
 // ===Scan Page===
@@ -49,7 +68,10 @@ async function handleScan() {
         const totalCount = getTotalAttributeCount(response.attributes);
         showStatus(`Found ${totalCount} attribute groups`, 'success');
 
+        // Show basic controls and advanced mode
         document.getElementById('empty-state').style.display = 'none';
+        document.getElementById('basic-controls').style.display = 'block';
+        document.getElementById('advanced-mode').style.display = 'block';
 
         setButtonLoading('scan-btn', false);
     } catch (error) {
@@ -77,10 +99,17 @@ async function handleReset() {
             action: 'reset'
         });
 
-        //Hide attributes and show empty state
-        document.getElementById('attributes-panel').style.display = 'none';
+        //Hide controls and show empty state
+        document.getElementById('basic-controls').style.display = 'none';
+        document.getElementById('advanced-mode').style.display = 'none';
         document.getElementById('empty-state').style.display = 'block';
 
+        // Reset sliders to default
+        document.getElementById('min-text-size').value = 12;
+        document.getElementById('min-button-size').value = 32;
+        document.getElementById('text-contrast').value = 0;
+        document.getElementById('spacing').value = 0;
+        
         currentAttributes = null;
         appliedChanges.clear();
 
@@ -95,9 +124,6 @@ async function handleReset() {
 
 // ===Display Attributes===
 function displayAttributes(attributes) {
-    //Show the attribute panel
-    document.getElementById('attributes-panel').style.display = 'flex';
-    
     //Show each option
     displayAttributeCategory('font-sizes', attributes.fontSizes, 'fontSize', 'plusMinus');
     displayAttributeCategory('colors', attributes.color, 'color', 'colorPreview');
@@ -378,6 +404,80 @@ async function clearHighlights() {
     } catch (error) {
         console.error('Error clearing highlights: ', error);
     }
+}
+
+// ===Basic Control Handlers===
+async function handleMinTextSize(e) {
+    const value = e.target.value;
+    document.getElementById('min-text-size-value').textContent = `${value}px`;
+    
+    try {
+        if (!currentTab) await getCurrentTab();
+        
+        await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'applyMinTextSize',
+            value: parseInt(value)
+        });
+    } catch (error) {
+        console.error('Error applying min text size:', error);
+    }
+}
+
+async function handleMinButtonSize(e) {
+    const value = e.target.value;
+    document.getElementById('min-button-size-value').textContent = `${value}px`;
+    
+    try {
+        if (!currentTab) await getCurrentTab();
+        
+        await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'applyMinButtonSize',
+            value: parseInt(value)
+        });
+    } catch (error) {
+        console.error('Error applying min button size:', error);
+    }
+}
+
+async function handleTextContrast(e) {
+    const value = e.target.value;
+    const labels = ['Normal', 'Low', 'Medium', 'High', 'Very High', 'Maximum'];
+    const index = Math.floor(value / 20);
+    document.getElementById('text-contrast-value').textContent = labels[index] || 'Normal';
+    
+    try {
+        if (!currentTab) await getCurrentTab();
+        
+        await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'applyTextContrast',
+            value: parseInt(value)
+        });
+    } catch (error) {
+        console.error('Error applying text contrast:', error);
+    }
+}
+
+async function handleSpacing(e) {
+    const value = e.target.value;
+    const labels = ['Normal', 'Compact', 'Relaxed', 'Comfortable', 'Spacious', 'Very Spacious'];
+    const index = Math.floor(value / 20);
+    document.getElementById('spacing-value').textContent = labels[index] || 'Normal';
+    
+    try {
+        if (!currentTab) await getCurrentTab();
+        
+        await chrome.tabs.sendMessage(currentTab.id, {
+            action: 'applySpacing',
+            value: parseInt(value)
+        });
+    } catch (error) {
+        console.error('Error applying spacing:', error);
+    }
+}
+
+function toggleAdvancedMode() {
+    const advancedMode = document.getElementById('advanced-mode');
+    advancedMode.classList.toggle('collapsed');
 }
 
 // ===Utility Functions===
