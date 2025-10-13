@@ -537,7 +537,10 @@ function resetButtonGroup(groupId) {
 
 // ===Utility Functions===
 function getTotalAttributeCount(attributes) {
-    return Object.values(attributes).reduce((sum, arr) => sum + arr.length, 0);
+    return Object.values(attributes).reduce((sum, arr) => {
+        // Only count arrays (skip minTextSize and minButtonSize numbers)
+        return sum + (Array.isArray(arr) ? arr.length : 0);
+    }, 0);
 }
 
 function showStatus(message, type) {
