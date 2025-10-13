@@ -111,7 +111,7 @@ class DOMAnalyzer {
                 
                 // Sort by importance score (higher is better)
                 result[key].sort((a, b) => b.importanceScore - a.importanceScore);
-                result[key] = result[key].slice(0, 20); //Limiting to top 20 elements for UI display
+                // No limit - show all attribute groups
             } else {
                 result[key] = [];
             }
