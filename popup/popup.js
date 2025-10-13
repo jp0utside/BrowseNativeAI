@@ -22,8 +22,10 @@ function setupEventListeners() {
     // Basic controls
     document.getElementById('min-text-size').addEventListener('input', handleMinTextSize);
     document.getElementById('min-button-size').addEventListener('input', handleMinButtonSize);
-    document.getElementById('text-contrast').addEventListener('input', handleTextContrast);
-    document.getElementById('spacing').addEventListener('input', handleSpacing);
+    
+    // Button group controls
+    setupButtonGroup('text-contrast-group', handleTextContrast);
+    setupButtonGroup('spacing-group', handleSpacing);
     
     // Advanced mode toggle
     document.getElementById('advanced-mode-toggle').addEventListener('click', toggleAdvancedMode);
@@ -119,10 +121,9 @@ async function handleReset() {
         document.getElementById('min-text-size-value').textContent = '--';
         document.getElementById('min-button-size-value').textContent = '--';
         
-        document.getElementById('text-contrast').value = 0;
-        document.getElementById('spacing').value = 0;
-        document.getElementById('text-contrast-value').textContent = 'Normal';
-        document.getElementById('spacing-value').textContent = 'Normal';
+        // Reset button groups
+        resetButtonGroup('text-contrast-group');
+        resetButtonGroup('spacing-group');
         
         currentAttributes = null;
         appliedChanges.clear();
@@ -420,6 +421,23 @@ async function clearHighlights() {
     }
 }
 
+// ===Button Group Setup===
+function setupButtonGroup(groupId, handler) {
+    const group = document.getElementById(groupId);
+    const buttons = group.querySelectorAll('.option-btn');
+    
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove active from all buttons in this group
+            buttons.forEach(b => b.classList.remove('active'));
+            // Add active to clicked button
+            btn.classList.add('active');
+            // Call handler with the value
+            handler(parseInt(btn.dataset.value));
+        });
+    });
+}
+
 // ===Initialize Basic Controls===
 function initializeBasicControls(minTextSize, minButtonSize) {
     // Set up minimum text size slider
@@ -474,11 +492,7 @@ async function handleMinButtonSize(e) {
     }
 }
 
-async function handleTextContrast(e) {
-    const value = parseInt(e.target.value);
-    const labels = ['Normal', 'High', 'Very High'];
-    document.getElementById('text-contrast-value').textContent = labels[value] || 'Normal';
-    
+async function handleTextContrast(value) {
     try {
         if (!currentTab) await getCurrentTab();
         
@@ -491,11 +505,7 @@ async function handleTextContrast(e) {
     }
 }
 
-async function handleSpacing(e) {
-    const value = parseInt(e.target.value);
-    const labels = ['Normal', 'High', 'Very High'];
-    document.getElementById('spacing-value').textContent = labels[value] || 'Normal';
-    
+async function handleSpacing(value) {
     try {
         if (!currentTab) await getCurrentTab();
         
@@ -511,6 +521,18 @@ async function handleSpacing(e) {
 function toggleAdvancedMode() {
     const advancedMode = document.getElementById('advanced-mode');
     advancedMode.classList.toggle('collapsed');
+}
+
+function resetButtonGroup(groupId) {
+    const group = document.getElementById(groupId);
+    const buttons = group.querySelectorAll('.option-btn');
+    buttons.forEach((btn, index) => {
+        if (index === 0) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 }
 
 // ===Utility Functions===

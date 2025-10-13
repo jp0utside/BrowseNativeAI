@@ -233,7 +233,7 @@ class DOMModifier {
     applySpacing(spacingLevel) {
         console.log(`Applying spacing level: ${spacingLevel}`);
         
-        // Map level to multiplier: 0=Normal (1.0x), 1=High (1.5x), 2=Very High (2.0x)
+        // Map level to multiplier: 0=Normal (1.0x), 1=Spacious (1.5x), 2=Very Spacious (2.0x)
         const multiplierMap = [1.0, 1.5, 2.0];
         const multiplier = multiplierMap[spacingLevel] || 1.0;
         

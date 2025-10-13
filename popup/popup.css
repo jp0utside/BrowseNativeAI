@@ -269,6 +269,44 @@ body::-webkit-scrollbar-thumb:hover {
   box-shadow: 0 3px 6px rgba(102, 126, 234, 0.5);
 }
 
+/* ===== Button Group ===== */
+.button-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.option-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #e9ecef;
+  background: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.option-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f8f9fa;
+}
+
+.option-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.option-btn:active {
+  transform: scale(0.95);
+}
+
 /* ===== Advanced Mode ===== */
 .advanced-mode {
   animation: fadeIn 0.4s ease;

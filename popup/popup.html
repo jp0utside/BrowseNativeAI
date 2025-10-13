@@ -53,22 +53,28 @@
       
       <!-- Text Contrast -->
       <div class="control-group">
-        <label for="text-contrast">
+        <label>
           <span class="control-icon">◐</span>
           <span class="control-label">Text Contrast</span>
-          <span class="control-value" id="text-contrast-value">Normal</span>
         </label>
-        <input type="range" id="text-contrast" min="0" max="2" value="0" step="1">
+        <div class="button-group" id="text-contrast-group">
+          <button class="option-btn active" data-value="0">Normal</button>
+          <button class="option-btn" data-value="1">High</button>
+          <button class="option-btn" data-value="2">Very High</button>
+        </div>
       </div>
       
       <!-- Spacing -->
       <div class="control-group">
-        <label for="spacing">
+        <label>
           <span class="control-icon">↔️</span>
           <span class="control-label">Element Spacing</span>
-          <span class="control-value" id="spacing-value">Normal</span>
         </label>
-        <input type="range" id="spacing" min="0" max="2" value="0" step="1">
+        <div class="button-group" id="spacing-group">
+          <button class="option-btn active" data-value="0">Normal</button>
+          <button class="option-btn" data-value="1">Spacious</button>
+          <button class="option-btn" data-value="2">Very Spacious</button>
+        </div>
       </div>
     </div>
     
