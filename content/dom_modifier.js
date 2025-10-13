@@ -82,15 +82,20 @@ class DOMModifier {
         });
         
         // Reset basic control modifications
-        document.querySelectorAll('[data-browse-native-min-text]').forEach(el => {
+        document.querySelectorAll('[data-browse-native-original-font-size]').forEach(el => {
             el.style.fontSize = '';
             el.removeAttribute('data-browse-native-min-text');
+            el.removeAttribute('data-browse-native-original-font-size');
         });
         
-        document.querySelectorAll('[data-browse-native-min-button]').forEach(el => {
+        document.querySelectorAll('[data-browse-native-original-width]').forEach(el => {
             el.style.minWidth = '';
             el.style.minHeight = '';
             el.removeAttribute('data-browse-native-min-button');
+            el.removeAttribute('data-browse-native-original-width');
+            el.removeAttribute('data-browse-native-original-height');
+            el.removeAttribute('data-browse-native-original-min-width');
+            el.removeAttribute('data-browse-native-original-min-height');
         });
         
         document.querySelectorAll('[data-browse-native-contrast]').forEach(el => {
@@ -111,8 +116,8 @@ class DOMModifier {
     
     // === Basic Control Methods ===
     
-    applyMinTextSize(minSize) {
-        console.log(`Applying minimum text size: ${minSize}px`);
+    applyMinTextSize(minSize, originalMinSize) {
+        console.log(`Applying minimum text size: ${minSize}px (original min: ${originalMinSize}px)`);
         
         // Find all text elements
         const textElements = document.querySelectorAll('p, span, div, li, td, th, a, button, label, h1, h2, h3, h4, h5, h6');
@@ -125,37 +130,72 @@ class DOMModifier {
             
             if (!hasText) return;
             
-            const style = window.getComputedStyle(el);
-            const currentSize = parseFloat(style.fontSize);
+            // Store original value if not already stored
+            if (!el.hasAttribute('data-browse-native-original-font-size')) {
+                const style = window.getComputedStyle(el);
+                const originalSize = parseFloat(style.fontSize);
+                el.setAttribute('data-browse-native-original-font-size', originalSize);
+            }
             
-            if (currentSize < minSize) {
+            const originalSize = parseFloat(el.getAttribute('data-browse-native-original-font-size'));
+            
+            // Apply or restore based on threshold
+            if (originalSize < minSize) {
                 el.style.fontSize = `${minSize}px`;
                 el.setAttribute('data-browse-native-min-text', 'true');
+            } else if (originalSize >= minSize && el.hasAttribute('data-browse-native-min-text')) {
+                // Restore original value if threshold moved up past it
+                el.style.fontSize = `${originalSize}px`;
+                el.removeAttribute('data-browse-native-min-text');
             }
         });
     }
     
-    applyMinButtonSize(minSize) {
-        console.log(`Applying minimum button size: ${minSize}px`);
+    applyMinButtonSize(minSize, originalMinSize) {
+        console.log(`Applying minimum button size: ${minSize}px (original min: ${originalMinSize}px)`);
         
         // Find all interactive elements
         const interactiveElements = document.querySelectorAll('button, a, input[type="button"], input[type="submit"], input[type="checkbox"], input[type="radio"], select, [role="button"]');
         
         interactiveElements.forEach(el => {
-            const rect = el.getBoundingClientRect();
+            // Store original dimensions if not already stored
+            if (!el.hasAttribute('data-browse-native-original-width')) {
+                const rect = el.getBoundingClientRect();
+                const style = window.getComputedStyle(el);
+                el.setAttribute('data-browse-native-original-width', rect.width);
+                el.setAttribute('data-browse-native-original-height', rect.height);
+                el.setAttribute('data-browse-native-original-min-width', style.minWidth);
+                el.setAttribute('data-browse-native-original-min-height', style.minHeight);
+            }
             
-            if (rect.width < minSize || rect.height < minSize) {
+            const originalWidth = parseFloat(el.getAttribute('data-browse-native-original-width'));
+            const originalHeight = parseFloat(el.getAttribute('data-browse-native-original-height'));
+            const smallestDimension = Math.min(originalWidth, originalHeight);
+            
+            // Apply or restore based on threshold
+            if (smallestDimension < minSize) {
                 el.style.minWidth = `${minSize}px`;
                 el.style.minHeight = `${minSize}px`;
                 el.setAttribute('data-browse-native-min-button', 'true');
+            } else if (smallestDimension >= minSize && el.hasAttribute('data-browse-native-min-button')) {
+                // Restore original values if threshold moved up past it
+                const origMinWidth = el.getAttribute('data-browse-native-original-min-width');
+                const origMinHeight = el.getAttribute('data-browse-native-original-min-height');
+                el.style.minWidth = origMinWidth === 'auto' || origMinWidth === '0px' ? '' : origMinWidth;
+                el.style.minHeight = origMinHeight === 'auto' || origMinHeight === '0px' ? '' : origMinHeight;
+                el.removeAttribute('data-browse-native-min-button');
             }
         });
     }
     
     applyTextContrast(contrastLevel) {
-        console.log(`Applying text contrast: ${contrastLevel}%`);
+        console.log(`Applying text contrast level: ${contrastLevel}`);
         
-        if (contrastLevel === 0) {
+        // Map level to boost: 0=Normal (0%), 1=High (50%), 2=Very High (100%)
+        const boostMap = [0, 50, 100];
+        const boost = boostMap[contrastLevel] || 0;
+        
+        if (boost === 0) {
             // Reset contrast
             document.querySelectorAll('[data-browse-native-contrast]').forEach(el => {
                 el.style.filter = '';
@@ -183,7 +223,7 @@ class DOMModifier {
             
             if (contrast < 4.5) {
                 // Increase contrast by making text darker or lighter
-                const contrastBoost = 1 + (contrastLevel / 100);
+                const contrastBoost = 1 + (boost / 100);
                 el.style.filter = `contrast(${contrastBoost})`;
                 el.setAttribute('data-browse-native-contrast', 'true');
             }
@@ -191,16 +231,30 @@ class DOMModifier {
     }
     
     applySpacing(spacingLevel) {
-        console.log(`Applying spacing: ${spacingLevel}%`);
+        console.log(`Applying spacing level: ${spacingLevel}`);
         
-        if (spacingLevel === 0) {
+        // Map level to multiplier: 0=Normal (1.0x), 1=High (1.5x), 2=Very High (2.0x)
+        const multiplierMap = [1.0, 1.5, 2.0];
+        const multiplier = multiplierMap[spacingLevel] || 1.0;
+        
+        if (multiplier === 1.0) {
             // Reset spacing
             document.querySelectorAll('[data-browse-native-spacing]').forEach(el => {
-                el.style.marginTop = '';
-                el.style.marginBottom = '';
-                el.style.paddingTop = '';
-                el.style.paddingBottom = '';
+                const origMarginTop = el.getAttribute('data-browse-native-original-margin-top');
+                const origMarginBottom = el.getAttribute('data-browse-native-original-margin-bottom');
+                const origPaddingTop = el.getAttribute('data-browse-native-original-padding-top');
+                const origPaddingBottom = el.getAttribute('data-browse-native-original-padding-bottom');
+                
+                el.style.marginTop = origMarginTop === '0' ? '' : (origMarginTop + 'px');
+                el.style.marginBottom = origMarginBottom === '0' ? '' : (origMarginBottom + 'px');
+                el.style.paddingTop = origPaddingTop === '0' ? '' : (origPaddingTop + 'px');
+                el.style.paddingBottom = origPaddingBottom === '0' ? '' : (origPaddingBottom + 'px');
+                
                 el.removeAttribute('data-browse-native-spacing');
+                el.removeAttribute('data-browse-native-original-margin-top');
+                el.removeAttribute('data-browse-native-original-margin-bottom');
+                el.removeAttribute('data-browse-native-original-padding-top');
+                el.removeAttribute('data-browse-native-original-padding-bottom');
             });
             return;
         }
@@ -208,26 +262,32 @@ class DOMModifier {
         // Apply spacing to block elements
         const blockElements = document.querySelectorAll('p, div, section, article, header, footer, nav, ul, ol, li, h1, h2, h3, h4, h5, h6');
         
-        const multiplier = 1 + (spacingLevel / 100);
-        
         blockElements.forEach(el => {
-            const style = window.getComputedStyle(el);
-            const currentMarginTop = parseFloat(style.marginTop);
-            const currentMarginBottom = parseFloat(style.marginBottom);
-            const currentPaddingTop = parseFloat(style.paddingTop);
-            const currentPaddingBottom = parseFloat(style.paddingBottom);
+            // Store original values if not already stored
+            if (!el.hasAttribute('data-browse-native-original-margin-top')) {
+                const style = window.getComputedStyle(el);
+                el.setAttribute('data-browse-native-original-margin-top', parseFloat(style.marginTop) || 0);
+                el.setAttribute('data-browse-native-original-margin-bottom', parseFloat(style.marginBottom) || 0);
+                el.setAttribute('data-browse-native-original-padding-top', parseFloat(style.paddingTop) || 0);
+                el.setAttribute('data-browse-native-original-padding-bottom', parseFloat(style.paddingBottom) || 0);
+            }
             
-            if (currentMarginTop > 0) {
-                el.style.marginTop = `${currentMarginTop * multiplier}px`;
+            const origMarginTop = parseFloat(el.getAttribute('data-browse-native-original-margin-top'));
+            const origMarginBottom = parseFloat(el.getAttribute('data-browse-native-original-margin-bottom'));
+            const origPaddingTop = parseFloat(el.getAttribute('data-browse-native-original-padding-top'));
+            const origPaddingBottom = parseFloat(el.getAttribute('data-browse-native-original-padding-bottom'));
+            
+            if (origMarginTop > 0) {
+                el.style.marginTop = `${origMarginTop * multiplier}px`;
             }
-            if (currentMarginBottom > 0) {
-                el.style.marginBottom = `${currentMarginBottom * multiplier}px`;
+            if (origMarginBottom > 0) {
+                el.style.marginBottom = `${origMarginBottom * multiplier}px`;
             }
-            if (currentPaddingTop > 0) {
-                el.style.paddingTop = `${currentPaddingTop * multiplier}px`;
+            if (origPaddingTop > 0) {
+                el.style.paddingTop = `${origPaddingTop * multiplier}px`;
             }
-            if (currentPaddingBottom > 0) {
-                el.style.paddingBottom = `${currentPaddingBottom * multiplier}px`;
+            if (origPaddingBottom > 0) {
+                el.style.paddingBottom = `${origPaddingBottom * multiplier}px`;
             }
             
             el.setAttribute('data-browse-native-spacing', 'true');

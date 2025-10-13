@@ -68,6 +68,9 @@ async function handleScan() {
         const totalCount = getTotalAttributeCount(response.attributes);
         showStatus(`Found ${totalCount} attribute groups`, 'success');
 
+        // Initialize basic controls with detected minimum values
+        initializeBasicControls(response.attributes.minTextSize, response.attributes.minButtonSize);
+
         // Show basic controls and advanced mode
         document.getElementById('empty-state').style.display = 'none';
         document.getElementById('basic-controls').style.display = 'block';
@@ -105,10 +108,21 @@ async function handleReset() {
         document.getElementById('empty-state').style.display = 'block';
 
         // Reset sliders to default
-        document.getElementById('min-text-size').value = 12;
-        document.getElementById('min-button-size').value = 32;
+        const minTextSlider = document.getElementById('min-text-size');
+        const minButtonSlider = document.getElementById('min-button-size');
+        
+        minTextSlider.value = minTextSlider.min;
+        minTextSlider.disabled = true;
+        minButtonSlider.value = minButtonSlider.min;
+        minButtonSlider.disabled = true;
+        
+        document.getElementById('min-text-size-value').textContent = '--';
+        document.getElementById('min-button-size-value').textContent = '--';
+        
         document.getElementById('text-contrast').value = 0;
         document.getElementById('spacing').value = 0;
+        document.getElementById('text-contrast-value').textContent = 'Normal';
+        document.getElementById('spacing-value').textContent = 'Normal';
         
         currentAttributes = null;
         appliedChanges.clear();
@@ -406,9 +420,27 @@ async function clearHighlights() {
     }
 }
 
+// ===Initialize Basic Controls===
+function initializeBasicControls(minTextSize, minButtonSize) {
+    // Set up minimum text size slider
+    const minTextSlider = document.getElementById('min-text-size');
+    minTextSlider.min = minTextSize;
+    minTextSlider.value = minTextSize;
+    minTextSlider.disabled = false;
+    document.getElementById('min-text-size-value').textContent = `${minTextSize}px`;
+    
+    // Set up minimum button size slider
+    const minButtonSlider = document.getElementById('min-button-size');
+    minButtonSlider.min = minButtonSize;
+    minButtonSlider.value = minButtonSize;
+    minButtonSlider.disabled = false;
+    document.getElementById('min-button-size-value').textContent = `${minButtonSize}px`;
+}
+
 // ===Basic Control Handlers===
 async function handleMinTextSize(e) {
     const value = e.target.value;
+    const minValue = e.target.min;
     document.getElementById('min-text-size-value').textContent = `${value}px`;
     
     try {
@@ -416,7 +448,8 @@ async function handleMinTextSize(e) {
         
         await chrome.tabs.sendMessage(currentTab.id, {
             action: 'applyMinTextSize',
-            value: parseInt(value)
+            value: parseInt(value),
+            minValue: parseInt(minValue)
         });
     } catch (error) {
         console.error('Error applying min text size:', error);
@@ -425,6 +458,7 @@ async function handleMinTextSize(e) {
 
 async function handleMinButtonSize(e) {
     const value = e.target.value;
+    const minValue = e.target.min;
     document.getElementById('min-button-size-value').textContent = `${value}px`;
     
     try {
@@ -432,7 +466,8 @@ async function handleMinButtonSize(e) {
         
         await chrome.tabs.sendMessage(currentTab.id, {
             action: 'applyMinButtonSize',
-            value: parseInt(value)
+            value: parseInt(value),
+            minValue: parseInt(minValue)
         });
     } catch (error) {
         console.error('Error applying min button size:', error);
@@ -440,17 +475,16 @@ async function handleMinButtonSize(e) {
 }
 
 async function handleTextContrast(e) {
-    const value = e.target.value;
-    const labels = ['Normal', 'Low', 'Medium', 'High', 'Very High', 'Maximum'];
-    const index = Math.floor(value / 20);
-    document.getElementById('text-contrast-value').textContent = labels[index] || 'Normal';
+    const value = parseInt(e.target.value);
+    const labels = ['Normal', 'High', 'Very High'];
+    document.getElementById('text-contrast-value').textContent = labels[value] || 'Normal';
     
     try {
         if (!currentTab) await getCurrentTab();
         
         await chrome.tabs.sendMessage(currentTab.id, {
             action: 'applyTextContrast',
-            value: parseInt(value)
+            value: value
         });
     } catch (error) {
         console.error('Error applying text contrast:', error);
@@ -458,17 +492,16 @@ async function handleTextContrast(e) {
 }
 
 async function handleSpacing(e) {
-    const value = e.target.value;
-    const labels = ['Normal', 'Compact', 'Relaxed', 'Comfortable', 'Spacious', 'Very Spacious'];
-    const index = Math.floor(value / 20);
-    document.getElementById('spacing-value').textContent = labels[index] || 'Normal';
+    const value = parseInt(e.target.value);
+    const labels = ['Normal', 'High', 'Very High'];
+    document.getElementById('spacing-value').textContent = labels[value] || 'Normal';
     
     try {
         if (!currentTab) await getCurrentTab();
         
         await chrome.tabs.sendMessage(currentTab.id, {
             action: 'applySpacing',
-            value: parseInt(value)
+            value: value
         });
     } catch (error) {
         console.error('Error applying spacing:', error);

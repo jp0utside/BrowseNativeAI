@@ -117,7 +117,46 @@ class DOMAnalyzer {
             }
         });
 
+        // Detect minimum sizes for basic controls
+        result.minTextSize = this.detectMinTextSize(elementsToAnalyze);
+        result.minButtonSize = this.detectMinButtonSize();
+
         return result;
+    }
+    
+    detectMinTextSize(elements) {
+        let minSize = Infinity;
+        
+        elements.forEach(el => {
+            const hasText = Array.from(el.childNodes).some(
+                node => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0
+            );
+            
+            if (hasText) {
+                const style = window.getComputedStyle(el);
+                const fontSize = parseFloat(style.fontSize);
+                if (fontSize < minSize && fontSize > 0) {
+                    minSize = fontSize;
+                }
+            }
+        });
+        
+        return minSize === Infinity ? 12 : Math.round(minSize);
+    }
+    
+    detectMinButtonSize() {
+        const interactiveElements = document.querySelectorAll('button, a, input[type="button"], input[type="submit"], input[type="checkbox"], input[type="radio"], [role="button"]');
+        let minSize = Infinity;
+        
+        interactiveElements.forEach(el => {
+            const rect = el.getBoundingClientRect();
+            const smallestDimension = Math.min(rect.width, rect.height);
+            if (smallestDimension < minSize && smallestDimension > 0) {
+                minSize = smallestDimension;
+            }
+        });
+        
+        return minSize === Infinity ? 24 : Math.round(minSize);
     }
 
     // Helper to sample elements intelligently

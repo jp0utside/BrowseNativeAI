@@ -56,11 +56,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse({ success: true });
             return true;
         } else if (request.action == 'applyMinTextSize') {
-            domModifier.applyMinTextSize(request.value);
+            domModifier.applyMinTextSize(request.value, request.minValue);
             sendResponse({ success: true });
             return true;
         } else if (request.action == 'applyMinButtonSize') {
-            domModifier.applyMinButtonSize(request.value);
+            domModifier.applyMinButtonSize(request.value, request.minValue);
             sendResponse({ success: true });
             return true;
         } else if (request.action == 'applyTextContrast') {
