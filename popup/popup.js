@@ -73,10 +73,18 @@ async function handleScan() {
         // Initialize basic controls with detected minimum values
         initializeBasicControls(response.attributes.minTextSize, response.attributes.minButtonSize);
 
-        // Show basic controls and advanced mode
+        // Show basic controls and advanced mode (collapsed by default)
         document.getElementById('empty-state').style.display = 'none';
         document.getElementById('basic-controls').style.display = 'block';
-        document.getElementById('advanced-mode').style.display = 'block';
+        
+        const advancedMode = document.getElementById('advanced-mode');
+        advancedMode.style.display = 'block';
+        advancedMode.classList.add('collapsed');
+        
+        // Collapse all attribute sections by default
+        document.querySelectorAll('.attribute-section').forEach(section => {
+            section.classList.add('collapsed');
+        });
 
         setButtonLoading('scan-btn', false);
     } catch (error) {
@@ -106,7 +114,11 @@ async function handleReset() {
 
         //Hide controls and show empty state
         document.getElementById('basic-controls').style.display = 'none';
-        document.getElementById('advanced-mode').style.display = 'none';
+        
+        const advancedMode = document.getElementById('advanced-mode');
+        advancedMode.style.display = 'none';
+        advancedMode.classList.remove('collapsed');
+        
         document.getElementById('empty-state').style.display = 'block';
 
         // Reset sliders to default
